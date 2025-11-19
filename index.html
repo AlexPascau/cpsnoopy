@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Artículos - Cell Phone Snoopy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="./images/icon-192.png">
+    <meta name="theme-color" content="#2c3e50">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <div class="logo-header">
+                    <img src="./images/icon-512.png" alt="Logo Cell Phone Snoopy" class="logo">
+                    <div class="company-info">
+                        <h1>Cell Phone Snoopy</h1>
+                        <p>Soluciones "Todo un Poco"</p>
+                    </div>
+                </div>
+                <div class="contact-info">
+                    <a href="tel:+584126597297" class="contact-btn phone-btn">
+                        📞 Llamar
+                    </a>
+                    <a href="https://wa.me/584126597297?text=Hola,%20me%20interesan%20sus%20productos" 
+                       target="_blank" class="contact-btn whatsapp-btn">
+                        💬 WhatsApp
+                    </a>
+                </div>
+            </div>
+
+            <div class="search-filters">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Buscar artículos...">
+                    <button id="searchBtn">🔍</button>
+                </div>
+                <div class="filter-category">
+                    <select id="categoryFilter">
+                        <option value="all">Todas las categorías</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="products-grid" id="productsGrid">
+                <!-- Productos cargados dinámicamente -->
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-contact">
+                <h3>Contacto</h3>
+                <div class="contact-options">
+                    <a href="tel:+584126597297" class="footer-contact-link">
+                        📞 +58 412-6597297
+                    </a>
+                    <a href="https://wa.me/584126597297?text=Hola,%20me%20interesan%20sus%20productos" 
+                       target="_blank" class="footer-contact-link">
+                        💬 WhatsApp
+                    </a>
+                    <a href="mailto:ramonsimancas61@gmail.com" class="footer-contact-link">
+                        ✉️ ramonsimancas61@gmail.com
+                    </a>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                <p>&copy; 2025 
+                    <a href="https://wa.me/584126097052?text=Me%20gustaría%20conocer%20su%20oferta%20para%20que%20publique%20mis%20artículos,%20productos%20o%20servicios." 
+                       target="_blank" class="provider-link">Intelligere</a>. 
+                    Todos los derechos reservados.
+                </p>
+            </div>
+        </footer>
+
+        <!-- Modal de detalles -->
+        <div id="productModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="modalContent"></div>
+                <div class="modal-actions">
+                    <a href="tel:+584126597297" class="contact-btn phone-btn">
+                        📞 Llamar ahora
+                    </a>
+                    <a href="#" target="_blank" class="contact-btn whatsapp-btn" id="whatsappModal">
+                        💬 Consultar por WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="js/drive-config.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
