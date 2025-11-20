@@ -384,6 +384,7 @@ function mostrarDetallesProducto(productoId) {
     // Formatear especificaciones como lista HTML
     const especificacionesHTML = formatearEspecificaciones(producto.especificaciones);
     
+    // NUEVO LAYOUT CON IMAGENES FIJAS Y TEXTO SCROLLABLE
     modalContent.innerHTML = `
         <div class="product-detail">
             <div class="detail-images">
@@ -393,7 +394,7 @@ function mostrarDetallesProducto(productoId) {
                 <h2>${producto.nombre}</h2>
                 <p class="product-category">${producto.categoria}</p>
                 <p class="product-price">$${producto.precio.toFixed(2)}</p>
-                <p class="product-description">${producto.descripcion}</p>
+                <div class="product-description">${producto.descripcion}</div>
                 ${especificacionesHTML}
             </div>
         </div>
@@ -410,6 +411,14 @@ function mostrarDetallesProducto(productoId) {
     document.getElementById('whatsappModal').href = urlWhatsapp;
     
     document.getElementById('productModal').style.display = 'block';
+
+    // Agregar al final de mostrarDetallesProducto
+    setTimeout(() => {
+        const detailInfo = document.querySelector('.detail-info');
+        if (detailInfo.scrollHeight > detailInfo.clientHeight) {
+            detailInfo.classList.add('scrollable');
+        }
+    }, 200);
 }
 
 /**
