@@ -918,3 +918,36 @@ footer {
 .carousel-slide img:hover {
     transform: scale(1.02);
 }
+
+/* MEJORAS PARA PRODUCTOS CON UNA SOLA IMAGEN */
+.carousel-container:only-child .carousel-track {
+    /* Asegurar que una sola imagen ocupe todo el espacio */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ocultar controles de navegación cuando hay una sola imagen */
+.carousel-container:only-child .carousel-btn,
+.carousel-container:only-child .carousel-dots {
+    display: none;
+}
+
+/* Indicador visual para imágenes clickeables (incluso una sola) */
+.carousel-slide img {
+    cursor: zoom-in;
+    transition: transform 0.2s ease;
+}
+
+.carousel-slide img:hover {
+    transform: scale(1.02);
+}
+
+/* Mejorar la experiencia con una sola imagen */
+.carousel-container.single-image {
+    cursor: zoom-in;
+}
+
+.carousel-container.single-image:hover {
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
+}
