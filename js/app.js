@@ -561,7 +561,7 @@ function inicializarCarrusel(producto) {
         }
     }
 
-    // Abrir modo maximizado - CORREGIDA
+    // Abrir modo maximizado - VERSIÓN CON PANEO
     function openMaximizedMode(imgElement) {
         console.log('📱 Abriendo modo maximizado');
         isMaximized = true;
@@ -582,55 +582,151 @@ function inicializarCarrusel(producto) {
         
         document.body.appendChild(overlay);
         
-        // Event listeners para el modo maximizado
+        // Elementos del DOM
         const maximizedImg = overlay.querySelector('.maximized-image');
         const closeBtn = overlay.querySelector('.maximized-close');
+        const container = overlay.querySelector('.maximized-container');
         
-        // Cerrar con botón - CORREGIDO: prevenir propagación
+        // Variables para el paneo/arrastre
+        let isDragging = false;
+        let startX, startY;
+        let translateX = 0, translateY = 0;
+        let currentScale = 1;
+
+        // Función para actualizar la transformación
+        function updateTransform() {
+            maximizedImg.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+        }
+
+        // Función para limitar el paneo
+        function constrainPan() {
+            if (!isZoomed) return;
+            
+            const imgRect = maximizedImg.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            const maxX = Math.max(0, (imgRect.width * currentScale - containerRect.width) / 2);
+            const maxY = Math.max(0, (imgRect.height * currentScale - containerRect.height) / 2);
+            
+            translateX = Math.max(-maxX, Math.min(maxX, translateX));
+            translateY = Math.max(-maxY, Math.min(maxY, translateY));
+        }
+
+        // Manejar inicio del arrastre
+        function startPan(e) {
+            if (!isZoomed) return;
+            
+            isDragging = true;
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            
+            startX = clientX - translateX;
+            startY = clientY - translateY;
+            maximizedImg.style.cursor = 'grabbing';
+            e.preventDefault();
+        }
+
+        // Manejar movimiento durante arrastre
+        function handlePan(e) {
+            if (!isDragging || !isZoomed) return;
+            
+            const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            
+            translateX = clientX - startX;
+            translateY = clientY - startY;
+            constrainPan();
+            updateTransform();
+            e.preventDefault();
+        }
+
+        // Detener arrastre
+        function stopPan() {
+            isDragging = false;
+            if (isZoomed) {
+                maximizedImg.style.cursor = 'grab';
+            }
+        }
+
+        // Event listeners para desktop
+        maximizedImg.addEventListener('mousedown', startPan);
+        document.addEventListener('mousemove', handlePan);
+        document.addEventListener('mouseup', stopPan);
+
+        // Event listeners para móviles
+        maximizedImg.addEventListener('touchstart', startPan);
+        document.addEventListener('touchmove', handlePan);
+        document.addEventListener('touchend', stopPan);
+
+        // Toggle zoom
+        function toggleZoom() {
+            if (!isZoomed) {
+                // Activar zoom
+                currentScale = 2.0;
+                isZoomed = true;
+                maximizedImg.classList.add('zoomed');
+                maximizedImg.style.cursor = 'grab';
+                console.log('🔍 Zoom activado - Puedes arrastrar la imagen');
+            } else {
+                // Desactivar zoom y resetear paneo
+                currentScale = 1;
+                isZoomed = false;
+                translateX = 0;
+                translateY = 0;
+                maximizedImg.classList.remove('zoomed');
+                maximizedImg.style.cursor = 'zoom-in';
+                console.log('🔍 Zoom desactivado');
+            }
+            updateTransform();
+        }
+
+        // Cerrar con botón
         closeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             closeMaximizedMode();
         });
-        
-        // Cerrar haciendo clic fuera de la imagen - CORREGIDO
+
+        // Cerrar haciendo clic fuera de la imagen
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
-                console.log('👆 Clic fuera de la imagen, cerrando modo maximizado');
                 closeMaximizedMode();
             }
         });
-        
-        // Doble clic para zoom - CORREGIDO: prevenir propagación
+
+        // Doble clic para zoom
         maximizedImg.addEventListener('dblclick', (e) => {
             e.stopPropagation();
             toggleZoom();
         });
-        
-        // Manejar toques para móviles
+
+        // Double tap para móviles
         let lastTap = 0;
-        maximizedImg.addEventListener('touchstart', (e) => {
-            e.stopPropagation();
+        maximizedImg.addEventListener('touchend', (e) => {
+            if (isDragging) return;
+            
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
             
             if (tapLength < 300 && tapLength > 0) {
-                // Double tap detectado
                 toggleZoom();
                 e.preventDefault();
             }
             lastTap = currentTime;
         });
-        
+
         // Prevenir scroll del body
         document.body.style.overflow = 'hidden';
-        
+
         // Efecto de entrada
         setTimeout(() => {
             overlay.classList.add('active');
         }, 10);
+
+        // Guardar referencia para cerrar
+        currentMaximizedOverlay = overlay;
     }
 
-    // Cerrar modo maximizado - CORREGIDA
+    // Cerrar modo maximizado - VERSIÓN CORREGIDA
     function closeMaximizedMode() {
         if (!isMaximized) return;
         
@@ -643,14 +739,14 @@ function inicializarCarrusel(producto) {
             overlay.classList.remove('active');
             setTimeout(() => {
                 overlay.remove();
-                // Reanudar auto-slide después de cerrar
-                startAutoSlide();
+                startAutoSlide(); // Reanudar carrusel
             }, 300);
         }
         
-        // Restaurar scroll del body
+        // Restaurar scroll
         document.body.style.overflow = '';
         currentMaximizedImage = null;
+        currentMaximizedOverlay = null;
     }
 
     // Toggle zoom en modo maximizado
