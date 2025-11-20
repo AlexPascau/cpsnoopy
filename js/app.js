@@ -455,7 +455,7 @@ function crearCarruselImagenes(producto) {
     
     // 🆕 AGREGAR clase para una sola imagen
     const isSingleImage = producto.imagenes.length === 1;
-    const containerClass = isSingleImage ? 'carousel-container single-image' : 'carousel-container';
+    const containerClass = isSingleImage ? 'carousel-container single-image' : 'carousel-container multiple-images';
     
     const dots = producto.imagenes.length > 1 ? producto.imagenes.map((_, index) => `
         <span class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
@@ -491,8 +491,8 @@ function inicializarCarrusel(producto) {
     const nextBtn = document.querySelector('.carousel-next');
     const carouselContainer = document.querySelector('.carousel-container');
     
-    if (slides.length === 0) return; // Solo salir si no hay imágenes
-    
+    if (slides.length === 0) return;
+
     let currentSlide = 0;
     const totalSlides = slides.length;
     let autoSlideInterval;
@@ -520,30 +520,38 @@ function inicializarCarrusel(producto) {
         }
     }
 
-    // 🆕 AGREGAR esta función para inicializar eventos de imágenes
+    // 🆕 CORRECCIÓN: Función mejorada para inicializar eventos de imágenes
     function inicializarEventosImagenes() {
-        slides.forEach(slide => {
+        slides.forEach((slide, index) => {
             const img = slide.querySelector('img');
             if (img) {
-                // Click simple para maximizar
-                img.addEventListener('click', (e) => {
+                // Remover event listeners previos para evitar duplicados
+                const newImg = img.cloneNode(true);
+                img.parentNode.replaceChild(newImg, img);
+                
+                // Click simple para maximizar - SOLO en la imagen, no en el slide
+                newImg.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    toggleMaximizedMode(img);
+                    e.preventDefault();
+                    console.log('🖱️ Click en imagen para maximizar');
+                    toggleMaximizedMode(newImg);
                 });
                 
                 // Prevenir arrastre accidental
-                img.addEventListener('dragstart', (e) => {
+                newImg.addEventListener('dragstart', (e) => {
                     e.preventDefault();
                 });
             }
         });
     }
 
-    // Llamar a la inicialización de eventos de imágenes
+    // Inicializar eventos de imágenes
     inicializarEventosImagenes();
 
-    // Función para modo maximizado
+    // Función para modo maximizado - CORREGIDA
     function toggleMaximizedMode(imgElement) {
+        console.log('🔍 Toggle maximized mode, estado actual:', isMaximized);
+        
         if (!isMaximized) {
             // Entrar en modo maximizado
             openMaximizedMode(imgElement);
@@ -553,10 +561,14 @@ function inicializarCarrusel(producto) {
         }
     }
 
-    // Abrir modo maximizado
+    // Abrir modo maximizado - CORREGIDA
     function openMaximizedMode(imgElement) {
+        console.log('📱 Abriendo modo maximizado');
         isMaximized = true;
         currentMaximizedImage = imgElement;
+        
+        // Detener auto-slide cuando se maximiza
+        stopAutoSlide();
         
         // Crear overlay para modo maximizado
         const overlay = document.createElement('div');
@@ -574,19 +586,40 @@ function inicializarCarrusel(producto) {
         const maximizedImg = overlay.querySelector('.maximized-image');
         const closeBtn = overlay.querySelector('.maximized-close');
         
-        // Cerrar con botón
-        closeBtn.addEventListener('click', closeMaximizedMode);
+        // Cerrar con botón - CORREGIDO: prevenir propagación
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeMaximizedMode();
+        });
         
-        // Cerrar haciendo clic fuera de la imagen
+        // Cerrar haciendo clic fuera de la imagen - CORREGIDO
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
+                console.log('👆 Clic fuera de la imagen, cerrando modo maximizado');
                 closeMaximizedMode();
             }
         });
         
-        // Doble clic para zoom
-        maximizedImg.addEventListener('dblclick', toggleZoom);
-        maximizedImg.addEventListener('touchstart', handleDoubleTap);
+        // Doble clic para zoom - CORREGIDO: prevenir propagación
+        maximizedImg.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            toggleZoom();
+        });
+        
+        // Manejar toques para móviles
+        let lastTap = 0;
+        maximizedImg.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            
+            if (tapLength < 300 && tapLength > 0) {
+                // Double tap detectado
+                toggleZoom();
+                e.preventDefault();
+            }
+            lastTap = currentTime;
+        });
         
         // Prevenir scroll del body
         document.body.style.overflow = 'hidden';
@@ -597,10 +630,11 @@ function inicializarCarrusel(producto) {
         }, 10);
     }
 
-    // Cerrar modo maximizado
+    // Cerrar modo maximizado - CORREGIDA
     function closeMaximizedMode() {
         if (!isMaximized) return;
         
+        console.log('📱 Cerrando modo maximizado');
         isMaximized = false;
         isZoomed = false;
         
@@ -609,6 +643,8 @@ function inicializarCarrusel(producto) {
             overlay.classList.remove('active');
             setTimeout(() => {
                 overlay.remove();
+                // Reanudar auto-slide después de cerrar
+                startAutoSlide();
             }, 300);
         }
         
@@ -626,43 +662,28 @@ function inicializarCarrusel(producto) {
             // Activar zoom
             maximizedImg.classList.add('zoomed');
             isZoomed = true;
+            console.log('🔍 Zoom activado');
         } else {
             // Desactivar zoom
             maximizedImg.classList.remove('zoomed');
             isZoomed = false;
+            console.log('🔍 Zoom desactivado');
         }
     }
 
-    // Manejar double tap en móviles
-    let lastTap = 0;
-    function handleDoubleTap(e) {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTap;
-        
-        if (tapLength < 300 && tapLength > 0) {
-            // Double tap detectado
-            toggleZoom();
-            e.preventDefault();
+    // 🆕 CORRECCIÓN: Asegurar que los botones de navegación sean visibles
+    function actualizarVisibilidadBotones() {
+        if (prevBtn && nextBtn) {
+            // Mostrar botones siempre que haya más de una imagen
+            if (totalSlides > 1) {
+                prevBtn.style.display = 'block';
+                nextBtn.style.display = 'block';
+            } else {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            }
         }
-        lastTap = currentTime;
     }
-
-    // Event listeners para las imágenes del carrusel
-    slides.forEach(slide => {
-        const img = slide.querySelector('img');
-        if (img) {
-            // Click simple para maximizar
-            img.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleMaximizedMode(img);
-            });
-            
-            // Prevenir arrastre accidental
-            img.addEventListener('dragstart', (e) => {
-                e.preventDefault();
-            });
-        }
-    });
 
     // Función para siguiente slide automático
     function nextSlide() {
@@ -673,7 +694,7 @@ function inicializarCarrusel(producto) {
 
     // Iniciar auto-desplazamiento
     function startAutoSlide() {
-        if (totalSlides > 1) {
+        if (totalSlides > 1 && !isMaximized) {
             autoSlideInterval = setInterval(nextSlide, 3000);
         }
     }
@@ -692,16 +713,18 @@ function inicializarCarrusel(producto) {
         startAutoSlide();
     }
 
-    // Event listeners para botones de navegación
+    // 🆕 CORRECCIÓN: Event listeners mejorados para botones de navegación
     if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             goToSlide(currentSlide - 1);
             restartAutoSlide();
         });
     }
 
     if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             goToSlide(currentSlide + 1);
             restartAutoSlide();
         });
@@ -709,7 +732,8 @@ function inicializarCarrusel(producto) {
 
     // Event listeners para dots
     dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
+        dot.addEventListener('click', (e) => {
+            e.stopPropagation();
             goToSlide(index);
             restartAutoSlide();
         });
@@ -758,6 +782,9 @@ function inicializarCarrusel(producto) {
         carouselContainer.addEventListener('mouseleave', startAutoSlide);
     }
 
+    // 🆕 CORRECCIÓN: Asegurar visibilidad inicial de botones
+    actualizarVisibilidadBotones();
+    
     // Iniciar auto-desplazamiento
     startAutoSlide();
 }
