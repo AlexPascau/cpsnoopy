@@ -1,4 +1,4 @@
-/* style.css - VERSIÓN CORREGIDA Y OPTIMIZADA */
+/* style.css - VERSIÓN CON CARGA PROGRESIVA */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -213,6 +213,59 @@ body {
 .product-condition {
     font-size: 0.8rem;
     color: #95a5a6;
+}
+
+/* ESQUELETOS DE CARGA */
+.skeleton {
+    animation: skeleton-pulse 1.5s ease-in-out infinite alternate;
+}
+
+.skeleton-image {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 2s infinite;
+}
+
+.skeleton-line {
+    height: 16px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.skeleton-title {
+    height: 20px;
+    width: 80%;
+}
+
+.skeleton-category {
+    height: 14px;
+    width: 60%;
+}
+
+.skeleton-price {
+    height: 18px;
+    width: 40%;
+}
+
+@keyframes skeleton-pulse {
+    0% {
+        opacity: 0.6;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
 }
 
 /* MODAL */
@@ -745,7 +798,6 @@ footer {
 }
 
 /* MODO MAXIMIZADO Y ZOOM - VERSIÓN CORREGIDA */
-/* MODO MAXIMIZADO Y ZOOM - VERSIÓN CORREGIDA SIN DUPLICADOS */
 .maximized-overlay {
     position: fixed;
     top: 0;
