@@ -864,14 +864,14 @@ footer {
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
 }
 
-/* LAYOUT FIJADO PARA MODAL DE PRODUCTO - VERSIÓN MEJORADA */
+/* LAYOUT FIJADO PARA MODAL DE PRODUCTO - VERSIÓN CORREGIDA */
 .product-detail {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 30px;
     padding: 30px;
     position: relative;
-    height: 70vh; /* Altura fija para forzar scroll interno */
+    min-height: 400px; /* Altura mínima en lugar de fija */
 }
 
 .detail-images {
@@ -879,15 +879,15 @@ footer {
     top: 20px;
     height: fit-content;
     align-self: start;
-    max-height: calc(70vh - 40px);
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .detail-info {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    max-height: calc(70vh - 40px);
+    max-height: 70vh; /* Máxima altura para scroll */
     overflow-y: auto;
     padding-right: 10px;
     scroll-behavior: smooth;
@@ -912,11 +912,22 @@ footer {
     background: #a8a8a8;
 }
 
-/* Ajustar el carrusel para el layout fijo */
+/* Ajustar el carrusel para el layout fijo - VERSIÓN CORREGIDA */
 .detail-images .carousel-container {
-    height: 100%;
-    max-height: 400px;
+    height: 400px; /* Altura fija para el carrusel */
+    min-height: 400px;
     position: relative;
+    background: #f8f9fa;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Asegurar que las imágenes del carrusel se vean bien */
+.detail-images .carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 /* RESPONSIVE MEJORADO - MANTENER STICKY EN MÓVILES */
@@ -925,7 +936,8 @@ footer {
         grid-template-columns: 1fr;
         gap: 0;
         padding: 0;
-        height: 80vh; /* Altura ajustada para móviles */
+        min-height: auto;
+        height: 80vh; /* Solo altura fija en móviles */
     }
     
     /* EN MÓVILES: IMAGEN STICKY ARRIBA, TEXTO SCROLLABLE ABAJO */
@@ -942,6 +954,7 @@ footer {
     
     .detail-images .carousel-container {
         height: 30vh;
+        min-height: 200px;
         max-height: 250px;
         margin: 0 auto;
     }
@@ -972,6 +985,7 @@ footer {
     
     .detail-images .carousel-container {
         height: 25vh;
+        min-height: 180px;
         max-height: 220px;
     }
     
@@ -988,6 +1002,7 @@ footer {
     
     .detail-images .carousel-container {
         height: 22vh;
+        min-height: 150px;
         max-height: 200px;
     }
     
@@ -1059,4 +1074,16 @@ footer {
     background-size: 100% 40px;
     background-repeat: no-repeat;
     background-position: bottom;
+}
+
+/* Asegurar que el carrusel se vea bien en desktop */
+@media (min-width: 969px) {
+    .detail-images .carousel-container {
+        height: 400px;
+        min-height: 400px;
+    }
+    
+    .product-detail {
+        min-height: 500px; /* Altura mínima suficiente para mostrar contenido */
+    }
 }
