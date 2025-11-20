@@ -1,4 +1,4 @@
-// app.js - VERSIÓN FUSIONADA con notificaciones
+// app.js - VERSIÓN CON CARGA PROGRESIVA DE IMÁGENES
 let productos = [];
 let productoActual = null;
 
@@ -26,8 +26,61 @@ const configContacto = {
 const AppState = {
     productoActual: null,
     sessionId: generarSessionId(),
-    mensajesPendientes: []
+    mensajesPendientes: [],
+    imagenesPrecargadas: new Set()
 };
+
+// =============================================
+// SISTEMA DE CARGA PROGRESIVA
+// =============================================
+
+/**
+ * Precarga imágenes en segundo plano para mejor rendimiento
+ */
+function precargarImagenes(productos) {
+    productos.forEach(producto => {
+        if (producto.imagenes && producto.imagenes.length > 0) {
+            // Precargar imagen principal inmediatamente
+            const imgPrincipal = new Image();
+            imgPrincipal.src = producto.imagenPrincipal;
+            imgPrincipal.onload = () => {
+                AppState.imagenesPrecargadas.add(producto.imagenPrincipal);
+                // Actualizar producto si ya está visible
+                actualizarImagenProducto(producto.id, producto.imagenPrincipal);
+            };
+            imgPrincipal.onerror = () => {
+                console.warn(`❌ No se pudo precargar imagen principal de ${producto.nombre}`);
+            };
+            
+            // Precargar otras imágenes en segundo plano
+            producto.imagenes.slice(1).forEach(imagen => {
+                const img = new Image();
+                img.src = imagen.url;
+                img.onload = () => {
+                    AppState.imagenesPrecargadas.add(imagen.url);
+                };
+            });
+        }
+    });
+}
+
+/**
+ * Actualiza la imagen de un producto específico cuando se carga
+ */
+function actualizarImagenProducto(productoId, imagenUrl) {
+    const productCard = document.querySelector(`[data-product-id="${productoId}"]`);
+    if (productCard) {
+        const imgElement = productCard.querySelector('.product-image');
+        if (imgElement && imgElement.src !== imagenUrl) {
+            imgElement.src = imagenUrl;
+            imgElement.style.opacity = '0';
+            setTimeout(() => {
+                imgElement.style.opacity = '1';
+                imgElement.style.transition = 'opacity 0.3s ease';
+            }, 50);
+        }
+    }
+}
 
 // =============================================
 // FUNCIONES DE UTILIDAD PARA NOTIFICACIONES
@@ -215,11 +268,14 @@ function configurarTrackingContacto() {
 }
 
 // =============================================
-// CARGA DE PRODUCTOS CON CORS PROXY
+// CARGA PROGRESIVA DE PRODUCTOS
 // =============================================
 async function cargarProductos(forzarActualizacion = false) {
     try {
-        console.log('📦 Cargando productos...');
+        console.log('📦 Cargando productos de forma progresiva...');
+        
+        // MOSTRAR ESQUELETOS MIENTRAS SE CARGA
+        mostrarEsqueletosCarga();
         
         const jsonUrl = getProductsJsonUrl();
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(jsonUrl)}`;
@@ -240,14 +296,41 @@ async function cargarProductos(forzarActualizacion = false) {
         }));
         
         guardarCacheLocal(productos);
-        console.log(`✅ ${productos.length} productos cargados`);
+        console.log(`✅ ${productos.length} productos procesados`);
+        
+        // MOSTRAR PRODUCTOS INMEDIATAMENTE (con placeholders)
         mostrarProductos(productos);
+        
+        // PRECARGAR IMÁGENES EN SEGUNDO PLANO
+        precargarImagenes(productos);
+        
         cargarCategorias();
         
     } catch (error) {
         console.error('❌ Error cargando productos:', error);
         await cargarDesdeCache();
     }
+}
+
+/**
+ * Muestra esqueletos de carga mientras se obtienen los productos
+ */
+function mostrarEsqueletosCarga() {
+    const grid = document.getElementById('productsGrid');
+    const skeletonCount = 8; // Número de esqueletos a mostrar
+    
+    grid.innerHTML = Array(skeletonCount).fill(0).map(() => `
+        <div class="product-card skeleton">
+            <div class="product-image-container">
+                <div class="skeleton-image"></div>
+            </div>
+            <div class="product-info">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-category"></div>
+                <div class="skeleton-line skeleton-price"></div>
+            </div>
+        </div>
+    `).join('');
 }
 
 /**
@@ -333,7 +416,7 @@ async function cargarDesdeCache() {
 }
 
 // =============================================
-// FUNCIONES DE UI
+// FUNCIONES DE UI MEJORADAS
 // =============================================
 function mostrarProductos(productosAMostrar) {
     const grid = document.getElementById('productsGrid');
@@ -350,14 +433,19 @@ function mostrarProductos(productosAMostrar) {
         return;
     }
     
+    // MOSTRAR PRODUCTOS INMEDIATAMENTE con lazy loading
     grid.innerHTML = productosAMostrar.map(producto => `
-        <div class="product-card" onclick="mostrarDetallesProducto(${producto.id})">
+        <div class="product-card" 
+             onclick="mostrarDetallesProducto(${producto.id})"
+             data-product-id="${producto.id}">
             <div class="product-image-container">
                 <img src="${producto.imagenPrincipal}" 
                      alt="${producto.nombre}"
                      class="product-image"
                      loading="lazy"
-                     onerror="this.src='./images/placeholder.jpg'">
+                     onload="this.style.opacity='1'"
+                     onerror="this.src='./images/placeholder.jpg'; this.style.opacity='1'"
+                     style="opacity: ${AppState.imagenesPrecargadas.has(producto.imagenPrincipal) ? '1' : '0.7'}; transition: opacity 0.3s ease">
             </div>
             <div class="product-info">
                 <div class="product-name">${producto.nombre}</div>
@@ -918,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', function() {
         emailjs.init(configContacto.proveedor.userId);
     }
     
-    // 2. Cargar productos
+    // 2. Cargar productos (ahora con carga progresiva)
     cargarProductos();
     
     // 3. Configurar eventos básicos
@@ -930,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 5. Configurar detección de conexión
     configurarDeteccionConexion();
     
-    console.log('🚀 Catálogo iniciado con sistema de notificaciones');
+    console.log('🚀 Catálogo iniciado con CARGA PROGRESIVA');
 });
 
 function configurarEventListeners() {
