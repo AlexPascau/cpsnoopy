@@ -481,7 +481,7 @@ function crearCarruselImagenes(producto) {
 }
 
 /**
- * Inicializa la funcionalidad del carrusel - VERSIÓN CON AUTO-DESPLAZAMIENTO
+ * Inicializa la funcionalidad del carrusel - VERSIÓN CON MODO MAXIMIZADO Y ZOOM
  */
 function inicializarCarrusel(producto) {
     const slides = document.querySelectorAll('.carousel-slide');
@@ -495,8 +495,11 @@ function inicializarCarrusel(producto) {
     let currentSlide = 0;
     const totalSlides = slides.length;
     let autoSlideInterval;
+    let isMaximized = false;
+    let isZoomed = false;
+    let currentMaximizedImage = null;
 
-    console.log(`🖼️ Carrusel auto-desplazamiento con ${totalSlides} imágenes`);
+    console.log(`🖼️ Carrusel avanzado con ${totalSlides} imágenes`);
 
     // Función para mostrar slide específico
     function goToSlide(index) {
@@ -516,14 +519,136 @@ function inicializarCarrusel(producto) {
         }
     }
 
-    // Función para ir al siguiente slide automáticamente
+    // Función para modo maximizado
+    function toggleMaximizedMode(imgElement) {
+        if (!isMaximized) {
+            // Entrar en modo maximizado
+            openMaximizedMode(imgElement);
+        } else {
+            // Salir del modo maximizado
+            closeMaximizedMode();
+        }
+    }
+
+    // Abrir modo maximizado
+    function openMaximizedMode(imgElement) {
+        isMaximized = true;
+        currentMaximizedImage = imgElement;
+        
+        // Crear overlay para modo maximizado
+        const overlay = document.createElement('div');
+        overlay.className = 'maximized-overlay';
+        overlay.innerHTML = `
+            <div class="maximized-container">
+                <img src="${imgElement.src}" alt="${imgElement.alt}" class="maximized-image">
+                <button class="maximized-close">×</button>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Event listeners para el modo maximizado
+        const maximizedImg = overlay.querySelector('.maximized-image');
+        const closeBtn = overlay.querySelector('.maximized-close');
+        
+        // Cerrar con botón
+        closeBtn.addEventListener('click', closeMaximizedMode);
+        
+        // Cerrar haciendo clic fuera de la imagen
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeMaximizedMode();
+            }
+        });
+        
+        // Doble clic para zoom
+        maximizedImg.addEventListener('dblclick', toggleZoom);
+        maximizedImg.addEventListener('touchstart', handleDoubleTap);
+        
+        // Prevenir scroll del body
+        document.body.style.overflow = 'hidden';
+        
+        // Efecto de entrada
+        setTimeout(() => {
+            overlay.classList.add('active');
+        }, 10);
+    }
+
+    // Cerrar modo maximizado
+    function closeMaximizedMode() {
+        if (!isMaximized) return;
+        
+        isMaximized = false;
+        isZoomed = false;
+        
+        const overlay = document.querySelector('.maximized-overlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.remove();
+            }, 300);
+        }
+        
+        // Restaurar scroll del body
+        document.body.style.overflow = '';
+        currentMaximizedImage = null;
+    }
+
+    // Toggle zoom en modo maximizado
+    function toggleZoom() {
+        const maximizedImg = document.querySelector('.maximized-image');
+        if (!maximizedImg) return;
+        
+        if (!isZoomed) {
+            // Activar zoom
+            maximizedImg.classList.add('zoomed');
+            isZoomed = true;
+        } else {
+            // Desactivar zoom
+            maximizedImg.classList.remove('zoomed');
+            isZoomed = false;
+        }
+    }
+
+    // Manejar double tap en móviles
+    let lastTap = 0;
+    function handleDoubleTap(e) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        
+        if (tapLength < 300 && tapLength > 0) {
+            // Double tap detectado
+            toggleZoom();
+            e.preventDefault();
+        }
+        lastTap = currentTime;
+    }
+
+    // Event listeners para las imágenes del carrusel
+    slides.forEach(slide => {
+        const img = slide.querySelector('img');
+        if (img) {
+            // Click simple para maximizar
+            img.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMaximizedMode(img);
+            });
+            
+            // Prevenir arrastre accidental
+            img.addEventListener('dragstart', (e) => {
+                e.preventDefault();
+            });
+        }
+    });
+
+    // Función para siguiente slide automático
     function nextSlide() {
         goToSlide(currentSlide + 1);
     }
 
     // Iniciar auto-desplazamiento
     function startAutoSlide() {
-        autoSlideInterval = setInterval(nextSlide, 3000); // 3 segundos
+        autoSlideInterval = setInterval(nextSlide, 3000);
     }
 
     // Detener auto-desplazamiento
@@ -540,18 +665,18 @@ function inicializarCarrusel(producto) {
         startAutoSlide();
     }
 
-    // Event listeners para botones
+    // Event listeners para botones de navegación
     if (prevBtn) {
         prevBtn.addEventListener('click', () => {
             goToSlide(currentSlide - 1);
-            restartAutoSlide(); // Reiniciar el timer al interacción manual
+            restartAutoSlide();
         });
     }
 
     if (nextBtn) {
         nextBtn.addEventListener('click', () => {
             goToSlide(currentSlide + 1);
-            restartAutoSlide(); // Reiniciar el timer al interacción manual
+            restartAutoSlide();
         });
     }
 
@@ -559,7 +684,7 @@ function inicializarCarrusel(producto) {
     dots.forEach((dot, index) => {
         dot.addEventListener('click', () => {
             goToSlide(index);
-            restartAutoSlide(); // Reiniciar el timer al interacción manual
+            restartAutoSlide();
         });
     });
 
@@ -572,6 +697,8 @@ function inicializarCarrusel(producto) {
             } else if (e.key === 'ArrowRight') {
                 goToSlide(currentSlide + 1);
                 restartAutoSlide();
+            } else if (e.key === 'Escape' && isMaximized) {
+                closeMaximizedMode();
             }
         }
     });
@@ -582,7 +709,7 @@ function inicializarCarrusel(producto) {
     if (carouselContainer) {
         carouselContainer.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
-            stopAutoSlide(); // Pausar auto-desplazamiento durante swipe
+            stopAutoSlide();
         });
 
         carouselContainer.addEventListener('touchend', (e) => {
@@ -596,7 +723,7 @@ function inicializarCarrusel(producto) {
                     goToSlide(currentSlide - 1);
                 }
             }
-            startAutoSlide(); // Reanudar auto-desplazamiento después del swipe
+            startAutoSlide();
         });
 
         // Pausar auto-desplazamiento cuando el mouse está sobre el carrusel
@@ -604,29 +731,8 @@ function inicializarCarrusel(producto) {
         carouselContainer.addEventListener('mouseleave', startAutoSlide);
     }
 
-    // Pausar auto-desplazamiento cuando el modal no está visible
-    const modal = document.getElementById('productModal');
-    if (modal) {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === 'style') {
-                    if (modal.style.display === 'block') {
-                        startAutoSlide();
-                    } else {
-                        stopAutoSlide();
-                    }
-                }
-            });
-        });
-        
-        observer.observe(modal, { attributes: true });
-    }
-
     // Iniciar auto-desplazamiento
     startAutoSlide();
-
-    // Limpiar intervalo cuando se cierre el modal
-    window.addEventListener('beforeunload', stopAutoSlide);
 }
 
 // =============================================
