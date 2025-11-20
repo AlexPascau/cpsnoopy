@@ -412,11 +412,27 @@ function mostrarDetallesProducto(productoId) {
     
     document.getElementById('productModal').style.display = 'block';
 
-    // Agregar al final de mostrarDetallesProducto
+    // Mejorar comportamiento sticky en móviles
     setTimeout(() => {
+        const detailImages = document.querySelector('.detail-images');
         const detailInfo = document.querySelector('.detail-info');
-        if (detailInfo.scrollHeight > detailInfo.clientHeight) {
-            detailInfo.classList.add('scrollable');
+        
+        if (detailInfo) {
+            // Detectar si el contenido es scrollable y agregar clase
+            if (detailInfo.scrollHeight > detailInfo.clientHeight) {
+                detailInfo.classList.add('scrollable');
+            }
+            
+            // Efecto de sombra al hacer scroll (solo en móviles)
+            if (window.innerWidth <= 968) {
+                detailInfo.addEventListener('scroll', function() {
+                    if (this.scrollTop > 10) {
+                        detailImages.classList.add('sticky-scrolled');
+                    } else {
+                        detailImages.classList.remove('sticky-scrolled');
+                    }
+                });
+            }
         }
     }, 200);
 }
@@ -462,9 +478,8 @@ function crearCarruselImagenes(producto) {
         </div>
     `).join('');
     
-    // 🆕 AGREGAR clase para una sola imagen
     const isSingleImage = producto.imagenes.length === 1;
-    const containerClass = isSingleImage ? 'carousel-container single-image' : 'carousel-container multiple-images';
+    const containerClass = isSingleImage ? 'carousel-container single-image' : 'carousel-container';
     
     const dots = producto.imagenes.length > 1 ? producto.imagenes.map((_, index) => `
         <span class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
