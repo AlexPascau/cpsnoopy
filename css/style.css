@@ -1,4 +1,4 @@
-/* style.css - VERSIÓN CORREGIDA */
+/* style.css - VERSIÓN CORREGIDA Y OPTIMIZADA */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -28,7 +28,8 @@ body {
     margin-bottom: 20px;
     flex-wrap: wrap;
     gap: 15px;
-    background: white;
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
+    color: white !important;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -49,12 +50,12 @@ body {
 
 .company-info h1 {
     font-size: 1.5rem;
-    color: #2c3e50;
+    color: white !important;
     margin-bottom: 5px;
 }
 
 .company-info p {
-    color: #7f8c8d;
+    color: #ecf0f1 !important;
     font-size: 0.9rem;
 }
 
@@ -94,7 +95,8 @@ body {
     gap: 15px;
     margin-bottom: 20px;
     flex-wrap: wrap;
-    background: white;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -226,7 +228,6 @@ body {
     backdrop-filter: blur(5px);
 }
 
-/* Asegurar que el modal se vea bien con el carrusel */
 .modal-content {
     background: white;
     margin: 2% auto;
@@ -288,6 +289,12 @@ body {
     object-fit: contain;
 }
 
+.detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
 .detail-info h2 {
     color: #2c3e50;
     margin-bottom: 10px;
@@ -299,8 +306,7 @@ body {
     margin: 10px 0;
 }
 
-.detail-info .product-description {
-    margin: 15px 0;
+.product-description {
     line-height: 1.6;
     color: #555;
 }
@@ -309,12 +315,32 @@ body {
     margin-top: 20px;
     padding: 15px;
     background: #f8f9fa;
-    border-radius: 6px;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
 }
 
 .product-specs h4 {
-    color: #34495e;
-    margin-bottom: 10px;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.specs-list {
+    list-style-type: disc;
+    margin-left: 20px;
+    padding-left: 0;
+}
+
+.specs-list li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+    color: #555;
+    padding-left: 5px;
+}
+
+.specs-list li:last-child {
+    margin-bottom: 0;
 }
 
 .modal-actions {
@@ -439,56 +465,21 @@ footer {
     background: #2980b9;
 }
 
-/* CORRECCIÓN COLOR HEADER - Agregar al final de style.css */
-.header-top {
-    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
-    color: white !important;
-}
-
-.company-info h1 {
-    color: white !important;
-}
-
-.company-info p {
-    color: #ecf0f1 !important;
-}
-
-.search-filters {
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(10px);
-}
-
-/* IMÁGENES RESPONSIVE - Agregar al CSS */
-.product-image-container {
-    position: relative;
-    height: 200px;
-    overflow: hidden;
-    background: #f8f9fa;
-}
-
-.product-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* Mantiene proporciones */
-    transition: transform 0.3s ease;
-}
-
-/* Para móviles */
+/* IMÁGENES RESPONSIVE */
 @media (max-width: 400px) {
     .products-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 columnas en móviles */
+        grid-template-columns: repeat(2, 1fr);
         gap: 15px;
     }
     
     .product-image-container {
-        height: 180px; /* Un poco más pequeño en móviles */
+        height: 180px;
     }
 }
 
-/* Para tablets */
 @media (min-width: 401px) and (max-width: 768px) {
     .products-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 columnas en tablets */
+        grid-template-columns: repeat(2, 1fr);
     }
     
     .product-image-container {
@@ -496,33 +487,31 @@ footer {
     }
 }
 
-/* Para desktop */
 @media (min-width: 769px) {
     .products-grid {
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
     
     .product-image-container {
-        height: 220px; /* Un poco más grande en desktop */
+        height: 220px;
     }
 }
 
 /* Imágenes en modal - responsive */
 .product-image-detail img {
     width: 100%;
-    height: auto; /* Altura automática */
+    height: auto;
     max-height: 400px;
     object-fit: contain;
 }
 
-/* Para móviles en modal */
 @media (max-width: 768px) {
     .product-image-detail img {
         max-height: 300px;
     }
 }
 
-/* NOTIFICACIONES - Agregar al final de style.css */
+/* NOTIFICACIONES */
 @keyframes slideInRight {
     from {
         transform: translateX(100%);
@@ -569,7 +558,7 @@ footer {
     background: #3498db;
 }
 
-/* CARRUSEL DE IMÁGENES - VERSIÓN CAMBIO DE IMAGEN */
+/* CARRUSEL DE IMÁGENES - VERSIÓN CORREGIDA */
 .carousel-container {
     position: relative;
     width: 100%;
@@ -608,17 +597,20 @@ footer {
     height: 100%;
     object-fit: contain;
     display: block;
-    /* AGREGAR ESTAS DOS LÍNEAS NUEVAS */
     cursor: zoom-in;
     transition: transform 0.2s ease;
 }
 
-/* Botones de navegación */
+.carousel-slide img:hover {
+    transform: scale(1.02);
+}
+
+/* BOTONES DE NAVEGACIÓN - VERSIÓN CORREGIDA */
 .carousel-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.3); /* Más transparente */
+    background: rgba(0, 0, 0, 0.3);
     color: white;
     border: none;
     width: 50px;
@@ -627,13 +619,15 @@ footer {
     font-size: 24px;
     font-weight: bold;
     cursor: pointer;
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    z-index: 10;
-    backdrop-filter: blur(5px); /* Efecto glass */
+    z-index: 100;
+    backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .carousel-btn:hover {
@@ -642,30 +636,25 @@ footer {
     backdrop-filter: blur(10px);
 }
 
-/* Responsive para botones transparentes */
-@media (max-width: 768px) {
-    .carousel-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 20px;
-        background: rgba(0, 0, 0, 0.4); /* Un poco más visible en móviles */
-    }
-}
-
-@media (max-width: 480px) {
-    .carousel-btn {
-        width: 35px;
-        height: 35px;
-        font-size: 18px;
-    }
-}
-
 .carousel-prev {
     left: 15px;
 }
 
 .carousel-next {
     right: 15px;
+}
+
+/* OCULTAR BOTONES CUANDO HAY UNA SOLA IMAGEN */
+.carousel-container.single-image .carousel-btn,
+.carousel-container.single-image .carousel-dots {
+    display: none !important;
+}
+
+/* MOSTRAR BOTONES CUANDO HAY MÚLTIPLES IMÁGENES */
+.carousel-container:not(.single-image) .carousel-btn {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 /* Indicadores (dots) */
@@ -722,6 +711,7 @@ footer {
         width: 40px;
         height: 40px;
         font-size: 20px;
+        background: rgba(0, 0, 0, 0.4);
     }
     
     .carousel-prev {
@@ -754,69 +744,7 @@ footer {
     }
 }
 
-/* LISTA DE ESPECIFICACIONES MEJORADA */
-.product-specs {
-    margin-top: 20px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #3498db;
-}
-
-.product-specs h4 {
-    color: #2c3e50;
-    margin-bottom: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-.specs-list {
-    list-style-type: disc;
-    margin-left: 20px;
-    padding-left: 0;
-}
-
-.specs-list li {
-    margin-bottom: 8px;
-    line-height: 1.5;
-    color: #555;
-    padding-left: 5px;
-}
-
-.specs-list li:last-child {
-    margin-bottom: 0;
-}
-
-/* Mejorar espaciado en el modal */
-.detail-info {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.product-description {
-    line-height: 1.6;
-    color: #555;
-}
-
-/* Responsive para especificaciones */
-@media (max-width: 768px) {
-    .product-specs {
-        padding: 12px;
-        margin-top: 15px;
-    }
-    
-    .specs-list {
-        margin-left: 15px;
-    }
-    
-    .specs-list li {
-        margin-bottom: 6px;
-        font-size: 0.9rem;
-    }
-}
-
-/* MODO MAXIMIZADO Y ZOOM */
+/* MODO MAXIMIZADO Y ZOOM - VERSIÓN CORREGIDA */
 .maximized-overlay {
     position: fixed;
     top: 0;
@@ -825,11 +753,12 @@ footer {
     height: 100%;
     background: rgba(0, 0, 0, 0.95);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     z-index: 10000;
     opacity: 0;
     transition: opacity 0.3s ease;
+    cursor: zoom-out;
 }
 
 .maximized-overlay.active {
@@ -838,23 +767,22 @@ footer {
 
 .maximized-container {
     position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    max-width: 90%;
+    max-height: 90%;
+    pointer-events: none;
 }
 
 .maximized-image {
-    max-width: 95%;
-    max-height: 95%;
+    max-width: 100%;
+    max-height: 90vh;
     object-fit: contain;
     transition: transform 0.3s ease;
     cursor: zoom-in;
+    pointer-events: auto;
 }
 
 .maximized-image.zoomed {
-    transform: scale(1.5);
+    transform: scale(2.0);
     cursor: grab;
 }
 
@@ -864,24 +792,18 @@ footer {
 
 .maximized-close {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: -40px;
+    right: 0;
     background: rgba(0, 0, 0, 0.7);
     color: white;
     border: none;
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    font-size: 30px;
-    font-weight: bold;
+    font-size: 20px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
     z-index: 10001;
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    pointer-events: auto;
 }
 
 .maximized-close:hover {
@@ -915,35 +837,7 @@ footer {
     }
 }
 
-.carousel-slide img:hover {
-    transform: scale(1.02);
-}
-
 /* MEJORAS PARA PRODUCTOS CON UNA SOLA IMAGEN */
-.carousel-container:only-child .carousel-track {
-    /* Asegurar que una sola imagen ocupe todo el espacio */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Ocultar controles de navegación cuando hay una sola imagen */
-.carousel-container:only-child .carousel-btn,
-.carousel-container:only-child .carousel-dots {
-    display: none;
-}
-
-/* Indicador visual para imágenes clickeables (incluso una sola) */
-.carousel-slide img {
-    cursor: zoom-in;
-    transition: transform 0.2s ease;
-}
-
-.carousel-slide img:hover {
-    transform: scale(1.02);
-}
-
-/* Mejorar la experiencia con una sola imagen */
 .carousel-container.single-image {
     cursor: zoom-in;
 }
