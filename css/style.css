@@ -745,6 +745,7 @@ footer {
 }
 
 /* MODO MAXIMIZADO Y ZOOM - VERSIÓN CORREGIDA */
+/* MODO MAXIMIZADO Y ZOOM - VERSIÓN CORREGIDA SIN DUPLICADOS */
 .maximized-overlay {
     position: fixed;
     top: 0;
@@ -759,6 +760,11 @@ footer {
     opacity: 0;
     transition: opacity 0.3s ease;
     cursor: zoom-out;
+    touch-action: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .maximized-overlay.active {
@@ -769,6 +775,7 @@ footer {
     position: relative;
     max-width: 90%;
     max-height: 90%;
+    overflow: hidden;
     pointer-events: none;
 }
 
@@ -779,11 +786,16 @@ footer {
     transition: transform 0.3s ease;
     cursor: zoom-in;
     pointer-events: auto;
+    transform-origin: center center;
+    will-change: transform;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 }
 
+/* Estado zoomed con capacidad de paneo */
 .maximized-image.zoomed {
-    transform: scale(2.0);
     cursor: grab;
+    transition: transform 0.1s ease;
 }
 
 .maximized-image.zoomed:active {
@@ -804,6 +816,7 @@ footer {
     cursor: pointer;
     z-index: 10001;
     pointer-events: auto;
+    transition: all 0.3s ease;
 }
 
 .maximized-close:hover {
@@ -824,6 +837,11 @@ footer {
         width: 45px;
         height: 45px;
         font-size: 25px;
+    }
+    
+    /* Mejorar experiencia táctil en móviles */
+    .maximized-image.zoomed {
+        touch-action: pan-x pan-y;
     }
 }
 
