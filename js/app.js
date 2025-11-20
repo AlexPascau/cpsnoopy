@@ -440,9 +440,6 @@ function formatearEspecificaciones(especificaciones) {
     `;
 }
 
-/**
- * Crea el HTML del carrusel de imágenes - VERSIÓN FADE
- */
 function crearCarruselImagenes(producto) {
     if (!producto.imagenes || producto.imagenes.length === 0) {
         return `<div class="no-image">Imagen no disponible</div>`;
@@ -456,6 +453,10 @@ function crearCarruselImagenes(producto) {
         </div>
     `).join('');
     
+    // 🆕 AGREGAR clase para una sola imagen
+    const isSingleImage = producto.imagenes.length === 1;
+    const containerClass = isSingleImage ? 'carousel-container single-image' : 'carousel-container';
+    
     const dots = producto.imagenes.length > 1 ? producto.imagenes.map((_, index) => `
         <span class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
     `).join('') : '';
@@ -466,7 +467,7 @@ function crearCarruselImagenes(producto) {
     ` : '';
     
     return `
-        <div class="carousel-container">
+        <div class="${containerClass}">
             <div class="carousel-track">
                 ${slides}
             </div>
@@ -490,7 +491,7 @@ function inicializarCarrusel(producto) {
     const nextBtn = document.querySelector('.carousel-next');
     const carouselContainer = document.querySelector('.carousel-container');
     
-    if (slides.length <= 1) return;
+    if (slides.length === 0) return; // Solo salir si no hay imágenes
     
     let currentSlide = 0;
     const totalSlides = slides.length;
@@ -518,6 +519,28 @@ function inicializarCarrusel(producto) {
             dots[currentSlide].classList.add('active');
         }
     }
+
+    // 🆕 AGREGAR esta función para inicializar eventos de imágenes
+    function inicializarEventosImagenes() {
+        slides.forEach(slide => {
+            const img = slide.querySelector('img');
+            if (img) {
+                // Click simple para maximizar
+                img.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleMaximizedMode(img);
+                });
+                
+                // Prevenir arrastre accidental
+                img.addEventListener('dragstart', (e) => {
+                    e.preventDefault();
+                });
+            }
+        });
+    }
+
+    // Llamar a la inicialización de eventos de imágenes
+    inicializarEventosImagenes();
 
     // Función para modo maximizado
     function toggleMaximizedMode(imgElement) {
@@ -643,12 +666,16 @@ function inicializarCarrusel(producto) {
 
     // Función para siguiente slide automático
     function nextSlide() {
-        goToSlide(currentSlide + 1);
+        if (totalSlides > 1) {
+            goToSlide(currentSlide + 1);
+        }
     }
 
     // Iniciar auto-desplazamiento
     function startAutoSlide() {
-        autoSlideInterval = setInterval(nextSlide, 3000);
+        if (totalSlides > 1) {
+            autoSlideInterval = setInterval(nextSlide, 3000);
+        }
     }
 
     // Detener auto-desplazamiento
