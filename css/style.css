@@ -863,3 +863,159 @@ footer {
 .carousel-container.single-image:hover {
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
 }
+
+/* LAYOUT FIJADO PARA MODAL DE PRODUCTO */
+.product-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    padding: 30px;
+    position: relative;
+}
+
+/* Transición suave para el sticky */
+.detail-images {
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    align-self: start;
+    transition: all 0.3s ease;
+}
+
+.detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+    scroll-behavior: smooth;
+    background: linear-gradient(to bottom, 
+        transparent 0%, 
+        transparent 90%, 
+        white 100%);
+    background-size: 100% 30px;
+    background-repeat: no-repeat;
+    background-position: bottom;
+}
+
+/* Indicador de scroll para contenido largo */
+.detail-info:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 10px;
+    height: 20px;
+    background: linear-gradient(to bottom, transparent, white);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.detail-info.scrollable:after {
+    opacity: 1;
+}
+
+/* Scroll personalizado para el área de texto */
+.detail-info::-webkit-scrollbar {
+    width: 6px;
+}
+
+.detail-info::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.detail-info::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.detail-info::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Ajustar el carrusel para el layout fijo */
+.detail-images .carousel-container {
+    height: 400px;
+    position: relative;
+}
+
+/* Responsive para el layout fijo */
+@media (max-width: 968px) {
+    .product-detail {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .detail-images {
+        position: relative;
+        top: 0;
+    }
+    
+    .detail-info {
+        max-height: none;
+        overflow-y: visible;
+    }
+    
+    .detail-images .carousel-container {
+        height: 350px;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-detail {
+        padding: 20px;
+        gap: 15px;
+    }
+    
+    .detail-images .carousel-container {
+        height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-images .carousel-container {
+        height: 250px;
+    }
+}
+
+/* Mejorar espaciado en el área de texto */
+.detail-info h2 {
+    color: #2c3e50;
+    margin-bottom: 5px;
+    font-size: 1.5rem;
+}
+
+.detail-info .product-category {
+    color: #7f8c8d;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.detail-info .product-price {
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 1.8rem;
+    margin: 10px 0;
+}
+
+.product-description {
+    line-height: 1.6;
+    color: #555;
+    margin: 10px 0;
+}
+
+.product-specs {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+/* Asegurar que el modal tenga suficiente altura */
+.modal-content {
+    max-height: 95vh;
+}
