@@ -331,12 +331,6 @@ body {
     padding: 30px;
 }
 
-/*.detail-images {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}*/
-
 .product-image-detail {
     background: #f8f9fa;
     border-radius: 8px;
