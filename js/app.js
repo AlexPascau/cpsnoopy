@@ -31,6 +31,89 @@ const AppState = {
 };
 
 // =============================================
+// DETECCIÓN Y CONFIGURACIÓN PARA MODO APP/APK
+// =============================================
+
+function configurarModoApp() {
+    // Detectar si estamos en modo standalone (PWA instalada)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        window.navigator.standalone === true;
+    
+    if (isStandalone) {
+        console.log('📱 Ejecutando en modo App/APK');
+        
+        // Aplicar clases específicas para modo app
+        document.body.classList.add('fullscreen-app');
+        document.documentElement.style.setProperty('--app-mode', 'true');
+        
+        // Ocultar cualquier elemento que pueda mostrar la URL
+        ocultarElementosNavegacion();
+        
+        // Configurar comportamiento de salida
+        configurarSalidaApp();
+    } else {
+        console.log('🌐 Ejecutando en modo navegador');
+    }
+}
+
+function ocultarElementosNavegacion() {
+    // Intentar ocultar cualquier barra de navegación nativa
+    const metaViewport = document.querySelector('meta[name="viewport"]');
+    if (metaViewport) {
+        metaViewport.setAttribute('content', 
+            'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    }
+    
+    // Inyectar estilos para ocultar posibles elementos de navegación
+    const style = document.createElement('style');
+    style.textContent = `
+        /* Ocultar cualquier elemento que pueda mostrar la URL */
+        iframe[src*="browser"], 
+        [class*="address"], 
+        [class*="url"],
+        [id*="address"],
+        [id*="url"] {
+            display: none !important;
+        }
+        
+        /* Prevenir cualquier scroll que revele la URL bar */
+        html, body {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function configurarSalidaApp() {
+    // Configurar doble tap para salir (comportamiento común en apps Android)
+    let backButtonPressed = 0;
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            e.preventDefault();
+            backButtonPressed++;
+            
+            if (backButtonPressed === 1) {
+                mostrarNotificacion('Presiona de nuevo para salir', 'info');
+                setTimeout(() => {
+                    backButtonPressed = 0;
+                }, 2000);
+            } else if (backButtonPressed === 2) {
+                // Cerrar la app (solo funciona en algunos entornos)
+                if (window.navigator.app) {
+                    window.navigator.app.exitApp();
+                } else {
+                    window.close();
+                }
+            }
+        }
+    });
+}
+
+// =============================================
 // SISTEMA DE CARGA PROGRESIVA
 // =============================================
 
@@ -1001,24 +1084,27 @@ function inicializarCarrusel(producto) {
 // INICIALIZACIÓN MEJORADA
 // =============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Inicializar EmailJS
+    // 1. Configurar modo App/APK primero
+    configurarModoApp();
+    
+    // 2. Inicializar EmailJS
     if (typeof emailjs !== 'undefined') {
         emailjs.init(configContacto.proveedor.userId);
     }
     
-    // 2. Cargar productos (ahora con carga progresiva)
+    // 3. Cargar productos (ahora con carga progresiva)
     cargarProductos();
     
-    // 3. Configurar eventos básicos
+    // 4. Configurar eventos básicos
     configurarEventListeners();
     
-    // 4. Configurar sistema de notificaciones
+    // 5. Configurar sistema de notificaciones
     configurarTrackingContacto();
     
-    // 5. Configurar detección de conexión
+    // 6. Configurar detección de conexión
     configurarDeteccionConexion();
     
-    console.log('🚀 Catálogo iniciado con CARGA PROGRESIVA');
+    console.log('🚀 Catálogo iniciado con soporte para APK');
 });
 
 function configurarEventListeners() {
