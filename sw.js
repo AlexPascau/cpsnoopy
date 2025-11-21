@@ -9,6 +9,8 @@ const STATIC_URLS = [
   './manifest.json',
   './images/icon-192.png',
   './images/icon-512.png',
+  './images/screenshot-mobile.png',
+  './images/screenshot-desktop.png',
   './images/placeholder.jpg'
 ];
 

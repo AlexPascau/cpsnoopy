@@ -8,6 +8,7 @@
   "background_color": "#2c3e50",
   "theme_color": "#2c3e50",
   "orientation": "portrait",
+  "fullscreen": true,
   "scope": "/",
   "prefer_related_applications": false,
   "features": [
