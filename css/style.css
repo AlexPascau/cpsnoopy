@@ -331,11 +331,11 @@ body {
     padding: 30px;
 }
 
-.detail-images {
+/*.detail-images {
     display: flex;
     flex-direction: column;
     gap: 15px;
-}
+}*/
 
 .product-image-detail {
     background: #f8f9fa;
@@ -945,9 +945,8 @@ footer {
 
 .detail-images {
     position: sticky;
-    top: 20px;
+    top: 0;
     height: fit-content;
-    align-self: start;
     display: flex;
     flex-direction: column;
 }
@@ -1014,13 +1013,13 @@ footer {
     
     /* EN MÓVILES: IMAGEN STICKY ARRIBA, TEXTO SCROLLABLE ABAJO */
     .detail-images {
-        position: relative; /* ❌ Cambiar de sticky a relative */
-        top: auto;
+        position: sticky;
+        top: 0;
         z-index: 10;
         background: white;
-        padding: 0; /* ✅ Simplificar padding */
+        padding: 15px 15px 10px 15px;
         border-bottom: 1px solid #eee;
-        max-height: none;
+        max-height: 50vh;
         flex-shrink: 0;
         order: 1; /* ✅ Asegurar orden correcto */
     }
