@@ -1,4 +1,4 @@
-// app.js - VERSIÓN CON CARGA PROGRESIVA DE IMÁGENES
+// app.js - VERSIÓN CORREGIDA CON SCROLL FUNCIONAL
 let productos = [];
 let productoActual = null;
 
@@ -64,7 +64,7 @@ function ocultarElementosNavegacion() {
             'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
     }
     
-    // Inyectar estilos para ocultar posibles elementos de navegación
+    // Inyectar estilos para ocultar posibles elementos de navegación - VERSIÓN CORREGIDA
     const style = document.createElement('style');
     style.textContent = `
         /* Ocultar cualquier elemento que pueda mostrar la URL */
@@ -76,12 +76,25 @@ function ocultarElementosNavegacion() {
             display: none !important;
         }
         
-        /* Prevenir cualquier scroll que revele la URL bar */
-        html, body {
-            overflow: hidden !important;
-            position: fixed !important;
-            width: 100% !important;
-            height: 100% !important;
+        /* CORRECCIÓN: Permitir scroll en el contenido principal */
+        .fullscreen-app {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .fullscreen-app .container {
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Prevenir bounce/rebote en iOS */
+        .fullscreen-app .container {
+            overscroll-behavior: contain;
         }
     `;
     document.head.appendChild(style);
