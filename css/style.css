@@ -625,7 +625,7 @@ footer {
     overflow: hidden;
     border-radius: 10px;
     background: #f8f9fa;
-    /*height: 400px;*/
+    height: 400px;
 }
 
 .carousel-track {
@@ -1037,7 +1037,7 @@ footer {
         height: 35vh;
         min-height: 250px;
     }
-    
+
     /* ✅ Asegurar que las imágenes sean visibles */
     .carousel-slide img {
         width: 100%;
@@ -1076,6 +1076,10 @@ footer {
         height: 25vh;
         min-height: 180px;
         max-height: 220px;
+    }
+
+    .carousel-container {
+        height: 25vh;
     }
 }
 
