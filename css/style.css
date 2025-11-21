@@ -626,6 +626,7 @@ footer {
     border-radius: 10px;
     background: #f8f9fa;
     height: 400px;
+    min-height: 400px;
 }
 
 .carousel-track {
@@ -660,6 +661,13 @@ footer {
     cursor: zoom-in;
     transition: transform 0.2s ease;
 }
+
+/* ✅ Asegurar que las imágenes se carguen correctamente */
+.carousel-slide img[src] {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
 
 .carousel-slide img:hover {
     transform: scale(1.02);
@@ -765,6 +773,7 @@ footer {
 @media (max-width: 768px) {
     .carousel-container {
         height: 300px;
+        min-height: 300px;
     }
     
     .carousel-btn {
@@ -795,6 +804,7 @@ footer {
 @media (max-width: 480px) {
     .carousel-container {
         height: 250px;
+        min-height: 250px;
     }
     
     .carousel-btn {
