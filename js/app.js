@@ -1,4 +1,4 @@
-// app.js - VERSIÓN FUSIONADA con notificaciones
+// app.js - VERSIÓN CORREGIDA CON SCROLL FUNCIONAL
 let productos = [];
 let productoActual = null;
 
@@ -26,8 +26,157 @@ const configContacto = {
 const AppState = {
     productoActual: null,
     sessionId: generarSessionId(),
-    mensajesPendientes: []
+    mensajesPendientes: [],
+    imagenesPrecargadas: new Set()
 };
+
+// =============================================
+// DETECCIÓN Y CONFIGURACIÓN PARA MODO APP/APK
+// =============================================
+
+function configurarModoApp() {
+    // Detectar si estamos en modo standalone (PWA instalada)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        window.navigator.standalone === true;
+    
+    if (isStandalone) {
+        console.log('📱 Ejecutando en modo App/APK');
+        
+        // Aplicar clases específicas para modo app
+        document.body.classList.add('fullscreen-app');
+        document.documentElement.style.setProperty('--app-mode', 'true');
+        
+        // Ocultar cualquier elemento que pueda mostrar la URL
+        ocultarElementosNavegacion();
+        
+        // Configurar comportamiento de salida
+        configurarSalidaApp();
+    } else {
+        console.log('🌐 Ejecutando en modo navegador');
+    }
+}
+
+function ocultarElementosNavegacion() {
+    // Intentar ocultar cualquier barra de navegación nativa
+    const metaViewport = document.querySelector('meta[name="viewport"]');
+    if (metaViewport) {
+        metaViewport.setAttribute('content', 
+            'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    }
+    
+    // Inyectar estilos para ocultar posibles elementos de navegación - VERSIÓN CORREGIDA
+    const style = document.createElement('style');
+    style.textContent = `
+        /* Ocultar cualquier elemento que pueda mostrar la URL */
+        iframe[src*="browser"], 
+        [class*="address"], 
+        [class*="url"],
+        [id*="address"],
+        [id*="url"] {
+            display: none !important;
+        }
+        
+        /* CORRECCIÓN: Permitir scroll en el contenido principal */
+        .fullscreen-app {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .fullscreen-app .container {
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Prevenir bounce/rebote en iOS */
+        .fullscreen-app .container {
+            overscroll-behavior: contain;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function configurarSalidaApp() {
+    // Configurar doble tap para salir (comportamiento común en apps Android)
+    let backButtonPressed = 0;
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            e.preventDefault();
+            backButtonPressed++;
+            
+            if (backButtonPressed === 1) {
+                mostrarNotificacion('Presiona de nuevo para salir', 'info');
+                setTimeout(() => {
+                    backButtonPressed = 0;
+                }, 2000);
+            } else if (backButtonPressed === 2) {
+                // Cerrar la app (solo funciona en algunos entornos)
+                if (window.navigator.app) {
+                    window.navigator.app.exitApp();
+                } else {
+                    window.close();
+                }
+            }
+        }
+    });
+}
+
+// =============================================
+// SISTEMA DE CARGA PROGRESIVA
+// =============================================
+
+/**
+ * Precarga imágenes en segundo plano para mejor rendimiento
+ */
+function precargarImagenes(productos) {
+    productos.forEach(producto => {
+        if (producto.imagenes && producto.imagenes.length > 0) {
+            // Precargar imagen principal inmediatamente
+            const imgPrincipal = new Image();
+            imgPrincipal.src = producto.imagenPrincipal;
+            imgPrincipal.onload = () => {
+                AppState.imagenesPrecargadas.add(producto.imagenPrincipal);
+                // Actualizar producto si ya está visible
+                actualizarImagenProducto(producto.id, producto.imagenPrincipal);
+            };
+            imgPrincipal.onerror = () => {
+                console.warn(`❌ No se pudo precargar imagen principal de ${producto.nombre}`);
+            };
+            
+            // Precargar otras imágenes en segundo plano
+            producto.imagenes.slice(1).forEach(imagen => {
+                const img = new Image();
+                img.src = imagen.url;
+                img.onload = () => {
+                    AppState.imagenesPrecargadas.add(imagen.url);
+                };
+            });
+        }
+    });
+}
+
+/**
+ * Actualiza la imagen de un producto específico cuando se carga
+ */
+function actualizarImagenProducto(productoId, imagenUrl) {
+    const productCard = document.querySelector(`[data-product-id="${productoId}"]`);
+    if (productCard) {
+        const imgElement = productCard.querySelector('.product-image');
+        if (imgElement && imgElement.src !== imagenUrl) {
+            imgElement.src = imagenUrl;
+            imgElement.style.opacity = '0';
+            setTimeout(() => {
+                imgElement.style.opacity = '1';
+                imgElement.style.transition = 'opacity 0.3s ease';
+            }, 50);
+        }
+    }
+}
 
 // =============================================
 // FUNCIONES DE UTILIDAD PARA NOTIFICACIONES
@@ -215,11 +364,14 @@ function configurarTrackingContacto() {
 }
 
 // =============================================
-// CARGA DE PRODUCTOS CON CORS PROXY
+// CARGA PROGRESIVA DE PRODUCTOS
 // =============================================
 async function cargarProductos(forzarActualizacion = false) {
     try {
-        console.log('📦 Cargando productos...');
+        console.log('📦 Cargando productos de forma progresiva...');
+        
+        // MOSTRAR ESQUELETOS MIENTRAS SE CARGA
+        mostrarEsqueletosCarga();
         
         const jsonUrl = getProductsJsonUrl();
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(jsonUrl)}`;
@@ -240,14 +392,41 @@ async function cargarProductos(forzarActualizacion = false) {
         }));
         
         guardarCacheLocal(productos);
-        console.log(`✅ ${productos.length} productos cargados`);
+        console.log(`✅ ${productos.length} productos procesados`);
+        
+        // MOSTRAR PRODUCTOS INMEDIATAMENTE (con placeholders)
         mostrarProductos(productos);
+        
+        // PRECARGAR IMÁGENES EN SEGUNDO PLANO
+        precargarImagenes(productos);
+        
         cargarCategorias();
         
     } catch (error) {
         console.error('❌ Error cargando productos:', error);
         await cargarDesdeCache();
     }
+}
+
+/**
+ * Muestra esqueletos de carga mientras se obtienen los productos
+ */
+function mostrarEsqueletosCarga() {
+    const grid = document.getElementById('productsGrid');
+    const skeletonCount = 8; // Número de esqueletos a mostrar
+    
+    grid.innerHTML = Array(skeletonCount).fill(0).map(() => `
+        <div class="product-card skeleton">
+            <div class="product-image-container">
+                <div class="skeleton-image"></div>
+            </div>
+            <div class="product-info">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-category"></div>
+                <div class="skeleton-line skeleton-price"></div>
+            </div>
+        </div>
+    `).join('');
 }
 
 /**
@@ -333,7 +512,7 @@ async function cargarDesdeCache() {
 }
 
 // =============================================
-// FUNCIONES DE UI
+// FUNCIONES DE UI MEJORADAS
 // =============================================
 function mostrarProductos(productosAMostrar) {
     const grid = document.getElementById('productsGrid');
@@ -350,14 +529,19 @@ function mostrarProductos(productosAMostrar) {
         return;
     }
     
+    // MOSTRAR PRODUCTOS INMEDIATAMENTE con lazy loading
     grid.innerHTML = productosAMostrar.map(producto => `
-        <div class="product-card" onclick="mostrarDetallesProducto(${producto.id})">
+        <div class="product-card" 
+             onclick="mostrarDetallesProducto(${producto.id})"
+             data-product-id="${producto.id}">
             <div class="product-image-container">
                 <img src="${producto.imagenPrincipal}" 
                      alt="${producto.nombre}"
                      class="product-image"
                      loading="lazy"
-                     onerror="this.src='./images/placeholder.jpg'">
+                     onload="this.style.opacity='1'"
+                     onerror="this.src='./images/placeholder.jpg'; this.style.opacity='1'"
+                     style="opacity: ${AppState.imagenesPrecargadas.has(producto.imagenPrincipal) ? '1' : '0.7'}; transition: opacity 0.3s ease">
             </div>
             <div class="product-info">
                 <div class="product-name">${producto.nombre}</div>
@@ -378,32 +562,24 @@ function mostrarDetallesProducto(productoId) {
     
     const modalContent = document.getElementById('modalContent');
     
-    // Crear carrusel de imágenes
-    const carouselHTML = crearCarruselImagenes(producto);
-    
-    // Formatear especificaciones como lista HTML
-    const especificacionesHTML = formatearEspecificaciones(producto.especificaciones);
-    
-    // NUEVO LAYOUT CON IMAGENES FIJAS Y TEXTO SCROLLABLE
+    // ✅ CORRECCIÓN: Usar template literal más simple y confiable
     modalContent.innerHTML = `
         <div class="product-detail">
             <div class="detail-images">
-                ${carouselHTML}
+                ${crearCarruselImagenes(producto)}
             </div>
             <div class="detail-info">
                 <h2>${producto.nombre}</h2>
                 <p class="product-category">${producto.categoria}</p>
                 <p class="product-price">$${producto.precio.toFixed(2)}</p>
                 <div class="product-description">${producto.descripcion}</div>
-                ${especificacionesHTML}
+                ${formatearEspecificaciones(producto.especificaciones)}
             </div>
         </div>
     `;
     
-    // Inicializar el carrusel después de mostrar el modal
-    setTimeout(() => {
-        inicializarCarrusel(producto);
-    }, 100);
+    // ✅ CORRECCIÓN MEJORADA: Usar MutationObserver para detectar cuando el DOM está listo
+    inicializarCarruselCuandoEsteListo(producto);
     
     // Actualizar enlaces de contacto
     const mensaje = `Hola, me interesa: ${producto.nombre} - $${producto.precio.toFixed(2)}`;
@@ -411,30 +587,51 @@ function mostrarDetallesProducto(productoId) {
     document.getElementById('whatsappModal').href = urlWhatsapp;
     
     document.getElementById('productModal').style.display = 'block';
+}
 
-    // Mejorar comportamiento sticky en móviles
-    setTimeout(() => {
-        const detailImages = document.querySelector('.detail-images');
-        const detailInfo = document.querySelector('.detail-info');
+// ✅ NUEVA FUNCIÓN: Inicializar carrusel cuando el DOM esté listo - VERSIÓN MEJORADA
+function inicializarCarruselCuandoEsteListo(producto) {
+    let initialized = false;
+    
+    const initializeIfReady = () => {
+        if (initialized) return;
         
-        if (detailInfo) {
-            // Detectar si el contenido es scrollable y agregar clase
-            if (detailInfo.scrollHeight > detailInfo.clientHeight) {
-                detailInfo.classList.add('scrollable');
-            }
+        const carouselContainer = document.querySelector('.carousel-container');
+        const slides = document.querySelectorAll('.carousel-slide');
+        
+        if (carouselContainer && slides.length > 0) {
+            console.log('✅ Carrusel detectado en el DOM, inicializando...');
+            initialized = true;
+            inicializarCarrusel(producto);
             
-            // Efecto de sombra al hacer scroll (solo en móviles)
-            if (window.innerWidth <= 968) {
-                detailInfo.addEventListener('scroll', function() {
-                    if (this.scrollTop > 10) {
-                        detailImages.classList.add('sticky-scrolled');
-                    } else {
-                        detailImages.classList.remove('sticky-scrolled');
-                    }
-                });
-            }
+            // ✅ FORZAR RE-FLOW para asegurar que las imágenes se muestren
+            setTimeout(() => {
+                carouselContainer.style.display = 'none';
+                carouselContainer.offsetHeight; // Trigger reflow
+                carouselContainer.style.display = '';
+            }, 50);
         }
-    }, 200);
+    };
+    
+    // Usar MutationObserver
+    const observer = new MutationObserver((mutations, obs) => {
+        initializeIfReady();
+    });
+    
+    // Comenzar a observar
+    observer.observe(document.getElementById('modalContent'), {
+        childList: true,
+        subtree: true
+    });
+    
+    // Intentos inmediatos
+    initializeIfReady();
+    
+    // Timeout de respaldo
+    setTimeout(() => {
+        initializeIfReady();
+        observer.disconnect();
+    }, 500);
 }
 
 /**
@@ -466,17 +663,29 @@ function formatearEspecificaciones(especificaciones) {
 }
 
 function crearCarruselImagenes(producto) {
+    console.log('🖼️ Creando carrusel para producto:', producto.nombre);
+    console.log('📸 Imágenes disponibles:', producto.imagenes);
+    
     if (!producto.imagenes || producto.imagenes.length === 0) {
+        console.warn('⚠️ No hay imágenes para el producto');
         return `<div class="no-image">Imagen no disponible</div>`;
     }
     
-    const slides = producto.imagenes.map((img, index) => `
-        <div class="carousel-slide ${index === 0 ? 'active' : ''}">
-            <img src="${img.url}" alt="${producto.nombre} - Imagen ${index + 1}" 
-                 onerror="this.src='./images/placeholder.jpg'"
-                 loading="lazy">
-        </div>
-    `).join('');
+    // ✅ CORRECCIÓN: Verificar que las URLs sean válidas
+    const slides = producto.imagenes.map((img, index) => {
+        const imageUrl = img.url || './images/placeholder.jpg';
+        console.log(`📸 Imagen ${index}:`, imageUrl);
+        
+        return `
+            <div class="carousel-slide ${index === 0 ? 'active' : ''}">
+                <img src="${imageUrl}" 
+                     alt="${producto.nombre} - Imagen ${index + 1}" 
+                     onerror="this.src='./images/placeholder.jpg'; console.log('❌ Error cargando imagen: ${imageUrl}')"
+                     loading="lazy"
+                     style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+        `;
+    }).join('');
     
     const isSingleImage = producto.imagenes.length === 1;
     const containerClass = isSingleImage ? 'carousel-container single-image' : 'carousel-container';
@@ -913,24 +1122,27 @@ function inicializarCarrusel(producto) {
 // INICIALIZACIÓN MEJORADA
 // =============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Inicializar EmailJS
+    // 1. Configurar modo App/APK primero
+    configurarModoApp();
+    
+    // 2. Inicializar EmailJS
     if (typeof emailjs !== 'undefined') {
         emailjs.init(configContacto.proveedor.userId);
     }
     
-    // 2. Cargar productos
+    // 3. Cargar productos (ahora con carga progresiva)
     cargarProductos();
     
-    // 3. Configurar eventos básicos
+    // 4. Configurar eventos básicos
     configurarEventListeners();
     
-    // 4. Configurar sistema de notificaciones
+    // 5. Configurar sistema de notificaciones
     configurarTrackingContacto();
     
-    // 5. Configurar detección de conexión
+    // 6. Configurar detección de conexión
     configurarDeteccionConexion();
     
-    console.log('🚀 Catálogo iniciado con sistema de notificaciones');
+    console.log('🚀 Catálogo iniciado con soporte para APK');
 });
 
 function configurarEventListeners() {
