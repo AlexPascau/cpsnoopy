@@ -562,32 +562,24 @@ function mostrarDetallesProducto(productoId) {
     
     const modalContent = document.getElementById('modalContent');
     
-    // Crear carrusel de imágenes
-    const carouselHTML = crearCarruselImagenes(producto);
-    
-    // Formatear especificaciones como lista HTML
-    const especificacionesHTML = formatearEspecificaciones(producto.especificaciones);
-    
-    // NUEVO LAYOUT CON IMAGENES FIJAS Y TEXTO SCROLLABLE
+    // ✅ CORRECCIÓN: Usar template literal más simple y confiable
     modalContent.innerHTML = `
         <div class="product-detail">
             <div class="detail-images">
-                ${carouselHTML}
+                ${crearCarruselImagenes(producto)}
             </div>
             <div class="detail-info">
                 <h2>${producto.nombre}</h2>
                 <p class="product-category">${producto.categoria}</p>
                 <p class="product-price">$${producto.precio.toFixed(2)}</p>
                 <div class="product-description">${producto.descripcion}</div>
-                ${especificacionesHTML}
+                ${formatearEspecificaciones(producto.especificaciones)}
             </div>
         </div>
     `;
     
-    // Inicializar el carrusel después de mostrar el modal
-    setTimeout(() => {
-        inicializarCarrusel(producto);
-    }, 100);
+    // ✅ CORRECCIÓN MEJORADA: Usar MutationObserver para detectar cuando el DOM está listo
+    inicializarCarruselCuandoEsteListo(producto);
     
     // Actualizar enlaces de contacto
     const mensaje = `Hola, me interesa: ${producto.nombre} - $${producto.precio.toFixed(2)}`;
@@ -595,30 +587,33 @@ function mostrarDetallesProducto(productoId) {
     document.getElementById('whatsappModal').href = urlWhatsapp;
     
     document.getElementById('productModal').style.display = 'block';
+}
 
-    // Mejorar comportamiento sticky en móviles
-    setTimeout(() => {
-        const detailImages = document.querySelector('.detail-images');
-        const detailInfo = document.querySelector('.detail-info');
-        
-        if (detailInfo) {
-            // Detectar si el contenido es scrollable y agregar clase
-            if (detailInfo.scrollHeight > detailInfo.clientHeight) {
-                detailInfo.classList.add('scrollable');
-            }
-            
-            // Efecto de sombra al hacer scroll (solo en móviles)
-            if (window.innerWidth <= 968) {
-                detailInfo.addEventListener('scroll', function() {
-                    if (this.scrollTop > 10) {
-                        detailImages.classList.add('sticky-scrolled');
-                    } else {
-                        detailImages.classList.remove('sticky-scrolled');
-                    }
-                });
-            }
+// ✅ NUEVA FUNCIÓN: Inicializar carrusel cuando el DOM esté listo
+function inicializarCarruselCuandoEsteListo(producto) {
+    const observer = new MutationObserver((mutations, obs) => {
+        const carouselContainer = document.querySelector('.carousel-container');
+        if (carouselContainer) {
+            console.log('✅ Carrusel detectado en el DOM, inicializando...');
+            inicializarCarrusel(producto);
+            obs.disconnect(); // Dejar de observar
         }
-    }, 200);
+    });
+    
+    // Comenzar a observar
+    observer.observe(document.getElementById('modalContent'), {
+        childList: true,
+        subtree: true
+    });
+    
+    // Timeout de respaldo por si MutationObserver falla
+    setTimeout(() => {
+        const carouselContainer = document.querySelector('.carousel-container');
+        if (carouselContainer) {
+            console.log('✅ Carrusel inicializado por timeout de respaldo');
+            inicializarCarrusel(producto);
+        }
+    }, 300);
 }
 
 /**
@@ -650,17 +645,29 @@ function formatearEspecificaciones(especificaciones) {
 }
 
 function crearCarruselImagenes(producto) {
+    console.log('🖼️ Creando carrusel para producto:', producto.nombre);
+    console.log('📸 Imágenes disponibles:', producto.imagenes);
+    
     if (!producto.imagenes || producto.imagenes.length === 0) {
+        console.warn('⚠️ No hay imágenes para el producto');
         return `<div class="no-image">Imagen no disponible</div>`;
     }
     
-    const slides = producto.imagenes.map((img, index) => `
-        <div class="carousel-slide ${index === 0 ? 'active' : ''}">
-            <img src="${img.url}" alt="${producto.nombre} - Imagen ${index + 1}" 
-                 onerror="this.src='./images/placeholder.jpg'"
-                 loading="lazy">
-        </div>
-    `).join('');
+    // ✅ CORRECCIÓN: Verificar que las URLs sean válidas
+    const slides = producto.imagenes.map((img, index) => {
+        const imageUrl = img.url || './images/placeholder.jpg';
+        console.log(`📸 Imagen ${index}:`, imageUrl);
+        
+        return `
+            <div class="carousel-slide ${index === 0 ? 'active' : ''}">
+                <img src="${imageUrl}" 
+                     alt="${producto.nombre} - Imagen ${index + 1}" 
+                     onerror="this.src='./images/placeholder.jpg'; console.log('❌ Error cargando imagen: ${imageUrl}')"
+                     loading="lazy"
+                     style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+        `;
+    }).join('');
     
     const isSingleImage = producto.imagenes.length === 1;
     const containerClass = isSingleImage ? 'carousel-container single-image' : 'carousel-container';
