@@ -589,15 +589,33 @@ function mostrarDetallesProducto(productoId) {
     document.getElementById('productModal').style.display = 'block';
 }
 
-// ✅ NUEVA FUNCIÓN: Inicializar carrusel cuando el DOM esté listo
+// ✅ NUEVA FUNCIÓN: Inicializar carrusel cuando el DOM esté listo - VERSIÓN MEJORADA
 function inicializarCarruselCuandoEsteListo(producto) {
-    const observer = new MutationObserver((mutations, obs) => {
+    let initialized = false;
+    
+    const initializeIfReady = () => {
+        if (initialized) return;
+        
         const carouselContainer = document.querySelector('.carousel-container');
-        if (carouselContainer) {
+        const slides = document.querySelectorAll('.carousel-slide');
+        
+        if (carouselContainer && slides.length > 0) {
             console.log('✅ Carrusel detectado en el DOM, inicializando...');
+            initialized = true;
             inicializarCarrusel(producto);
-            obs.disconnect(); // Dejar de observar
+            
+            // ✅ FORZAR RE-FLOW para asegurar que las imágenes se muestren
+            setTimeout(() => {
+                carouselContainer.style.display = 'none';
+                carouselContainer.offsetHeight; // Trigger reflow
+                carouselContainer.style.display = '';
+            }, 50);
         }
+    };
+    
+    // Usar MutationObserver
+    const observer = new MutationObserver((mutations, obs) => {
+        initializeIfReady();
     });
     
     // Comenzar a observar
@@ -606,14 +624,14 @@ function inicializarCarruselCuandoEsteListo(producto) {
         subtree: true
     });
     
-    // Timeout de respaldo por si MutationObserver falla
+    // Intentos inmediatos
+    initializeIfReady();
+    
+    // Timeout de respaldo
     setTimeout(() => {
-        const carouselContainer = document.querySelector('.carousel-container');
-        if (carouselContainer) {
-            console.log('✅ Carrusel inicializado por timeout de respaldo');
-            inicializarCarrusel(producto);
-        }
-    }, 300);
+        initializeIfReady();
+        observer.disconnect();
+    }, 500);
 }
 
 /**
