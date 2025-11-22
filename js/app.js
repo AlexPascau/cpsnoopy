@@ -1122,28 +1122,59 @@ function inicializarCarrusel(producto) {
 // INICIALIZACIÓN MEJORADA
 // =============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Configurar modo App/APK primero
+    // 1. Registrar Service Worker PRIMERO
+    registrarServiceWorker();
+    
+    // 2. Configurar modo App/APK
     configurarModoApp();
     
-    // 2. Inicializar EmailJS
+    // 3. Inicializar EmailJS
     if (typeof emailjs !== 'undefined') {
         emailjs.init(configContacto.proveedor.userId);
     }
     
-    // 3. Cargar productos (ahora con carga progresiva)
+    // 4. Cargar productos (ahora con carga progresiva)
     cargarProductos();
     
-    // 4. Configurar eventos básicos
+    // 5. Configurar eventos básicos
     configurarEventListeners();
     
-    // 5. Configurar sistema de notificaciones
+    // 6. Configurar sistema de notificaciones
     configurarTrackingContacto();
     
-    // 6. Configurar detección de conexión
+    // 7. Configurar detección de conexión
     configurarDeteccionConexion();
     
     console.log('🚀 Catálogo iniciado con soporte para APK');
 });
+
+// =============================================
+// REGISTRO DEL SERVICE WORKER
+// =============================================
+function registrarServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('✅ Service Worker registrado correctamente:', registration);
+                
+                // Verificar si hay una nueva versión disponible
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    console.log('🔄 Nueva versión del Service Worker encontrada:', newWorker);
+                });
+            })
+            .catch(error => {
+                console.error('❌ Error registrando Service Worker:', error);
+            });
+        
+        // Escuchar cambios en el Service Worker
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('🔄 Controller changed - Service Worker actualizado');
+        });
+    } else {
+        console.log('❌ Service Worker no soportado en este navegador');
+    }
+}
 
 function configurarEventListeners() {
     // Cerrar modal
